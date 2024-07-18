@@ -13,8 +13,8 @@ bool App::init() {
     // setup color
     setRGBcolor(BLUE);
 
-    ssid = (char *) "XXXXXXX";      //  your network SSID (name)
-    pass = (char *) "XXXXXXX";   // your network password
+    ssid = (char *) "Casa RS";      //  your network SSID (name)
+    pass = (char *) "richksecure4967";   // your network password
 
     // initSerial();
     initSensors();
@@ -44,6 +44,9 @@ bool App::loop() {
 void App::doAction() {
     updateButtonsState();
     switch (action) {
+        case SENSORSSERVERCLIENT :
+            startSensorsServerClient();
+            break;
         case WIFISTATUS :
             showWifiInfo();
             break;
@@ -65,6 +68,9 @@ void App::doAction() {
 void App::updateButtonsState() {
     if (IsButtonClicked(USER_BUTTON_A)) {
         switch (action) {
+            case SENSORSSERVERCLIENT :
+                action = WIFISTATUS;
+                break;
             case WIFISTATUS :
                 action = SENSORS;
                 break;
@@ -72,7 +78,7 @@ void App::updateButtonsState() {
                 action = SERVERHTTP;
                 break;
             case SERVERHTTP :
-                action = WIFISTATUS;
+                action = SENSORSSERVERCLIENT;
                 break;
             default :
                 textOutDevKitScreen(1, "ERROR updateButtonsState", 1);
@@ -125,6 +131,79 @@ void App::showWifiInfo() {
     printWifiStatus();
     delay(100);
     // }
+}
+
+void App::startSensorsServerClient() {
+    WiFiClient client = WiFiClient();
+    client.connect("192.168.0.254");
+    if (client) {
+        //Serial.println("new client");
+        digitalWrite(LED_AZURE, 1);
+        textOutDevKitScreen(1, "sending data", 1);
+        textOutDevKitScreen(2, "", 1);
+        textOutDevKitScreen(3, "", 1);
+        // an http request ends with a blank line
+        boolean currentLineIsBlank = true;
+        while (client.connected()) {
+            if (client.available()) {
+                char c = client.read();
+                Serial.write(c);
+
+                float pressure = 0;
+                float temperaturePR = 0;
+                pressureSensor->getPressure(&pressure);
+                pressureSensor->getTemperature(&temperaturePR);
+                ht_sensor->reset();
+                float temperatureHT = 0;
+                ht_sensor->getTemperature(&temperatureHT);
+                float humidity = 0;
+                ht_sensor->getHumidity(&humidity);
+
+                if (c == '\n' && currentLineIsBlank) {
+                    // send a standard http response header
+                    client.println("HTTP/1.1 200 OK");
+                    client.println("nontent-Type: text/html");
+                    client.println("Connection: close");
+                    client.println("Refresh: 2");
+                    client.println("");
+                    client.println("<!DOCTYPE HTML>");
+                    client.println("<html><body>");
+                    client.print("{");
+                    client.print("\"temperature_sensor_1\":");
+                    client.print(temperaturePR);
+                    client.print(",");
+                    client.print("\"temperature_sensor_2\":");
+                    client.print(temperatureHT);
+                    client.print(",");
+                    client.print("\"pressure\":");
+                    client.print(pressure);
+                    client.print(",");
+                    client.print("\"humidity\":");
+                    client.print(humidity);
+                    client.println("}");
+
+                    client.println("</body></html>");
+                    break;
+                }
+                if (c == '\n') {
+                    // you're starting a new line
+                    currentLineIsBlank = true;
+                } else if (c != '\r') {
+                    // you've gotten a character on the current line
+                    currentLineIsBlank = false;
+                }
+            }
+        }
+        // give the web browser time to receive the data
+        delay(1);
+
+        // close the connection:
+        client.stop();
+        //Serial.println("client disonnected");
+        digitalWrite(LED_AZURE, 0);
+        textOutDevKitScreen(1, "client disonnected", 1);
+        textOutDevKitScreen(2, "", 1);
+        textOutDevKitScreen(3, "", 1);
 }
 
 
@@ -266,7 +345,7 @@ void App::initWifi() {
     int i = 0;
     while (status != WL_CONNECTED) {
 
-        snprintf(buffInfo, sizeof(buffInfo), "Attempt %d to \r\connnect to SSID\r\n%s \r\n", ++i, ssid);
+        snprintf(buffInfo, sizeof(buffInfo), "Attempt %d to \r\nconnect to SSID\r\n%s \r\n", ++i, ssid);
         textOutDevKitScreen(1, buffInfo, 1);
 
         // Connect to WPA/WPA2 network. Change this line if using open or WEP network:

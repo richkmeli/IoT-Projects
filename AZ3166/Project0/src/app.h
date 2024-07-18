@@ -34,7 +34,7 @@
 #define SWAP(a, b) ((a) ^= (b), (b) ^= (a), (a) ^= (b))
 
 enum Action {
-    WIFISTATUS = 0, SENSORS = 1, SERVERHTTP = 2
+    SENSORSSERVERCLIENT = 0, WIFISTATUS = 1, SENSORS = 2, SERVERHTTP = 3
 };
 
 class TagRGB {
@@ -93,6 +93,7 @@ public:
     void updateButtonsState();
     void showSensorsInfo();
     void showWifiInfo();
+    void startSensorsServerClient();
     void monitoringHTTPServerConnections(bool blockingSocket);
     void refreshLeds();
     void setRGBcolor(COLOR color2);
