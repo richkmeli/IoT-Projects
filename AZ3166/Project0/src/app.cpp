@@ -134,15 +134,15 @@ void App::showWifiInfo() {
 }
 
 void App::startSensorsServerClient() {
-    WiFiClient client = WiFiClient();
-    client.connect("192.168.0.254");
-    if (client) {
-        //Serial.println("new client");
+    WiFiClient client;
+    const char* serverIp = "192.168.0.254";
+    const unsigned short port = 80;  // Porta predefinita per HTTP
+
+    if (client.connect(serverIp, port)) {
         digitalWrite(LED_AZURE, 1);
         textOutDevKitScreen(1, "sending data", 1);
         textOutDevKitScreen(2, "", 1);
         textOutDevKitScreen(3, "", 1);
-        // an http request ends with a blank line
         boolean currentLineIsBlank = true;
         while (client.connected()) {
             if (client.available()) {
@@ -160,9 +160,8 @@ void App::startSensorsServerClient() {
                 ht_sensor->getHumidity(&humidity);
 
                 if (c == '\n' && currentLineIsBlank) {
-                    // send a standard http response header
                     client.println("HTTP/1.1 200 OK");
-                    client.println("nontent-Type: text/html");
+                    client.println("Content-Type: text/html");
                     client.println("Connection: close");
                     client.println("Refresh: 2");
                     client.println("");
@@ -181,117 +180,129 @@ void App::startSensorsServerClient() {
                     client.print("\"humidity\":");
                     client.print(humidity);
                     client.println("}");
-
                     client.println("</body></html>");
                     break;
                 }
                 if (c == '\n') {
-                    // you're starting a new line
                     currentLineIsBlank = true;
                 } else if (c != '\r') {
-                    // you've gotten a character on the current line
                     currentLineIsBlank = false;
                 }
             }
         }
-        // give the web browser time to receive the data
         delay(1);
-
-        // close the connection:
         client.stop();
-        //Serial.println("client disonnected");
         digitalWrite(LED_AZURE, 0);
-        textOutDevKitScreen(1, "client disonnected", 1);
+        textOutDevKitScreen(1, "client disconnected", 1);
         textOutDevKitScreen(2, "", 1);
         textOutDevKitScreen(3, "", 1);
+    } else {
+        textOutDevKitScreen(1, "connection failed", 1);
+    }
 }
 
-
 void App::monitoringHTTPServerConnections(bool blockingSocket) {
+    // Mostra lo stato iniziale
     textOutDevKitScreen(0, "Server HTTP\r\n", 1);
     textOutDevKitScreen(1, "listening...\r\n\r\n", 1);
     textOutDevKitScreen(2, "                 ", 1);
     textOutDevKitScreen(3, "                 ", 1);
-/*
-    if (blockingSocket){
-  Server.setTimeout(-1);
-}else{
-  Server.setTimeout(0);
-}*/
-    WiFiServer wiFiServer = WiFiServer(80);
+
+    // Inizializza il server sulla porta 80
+    WiFiServer wiFiServer(80);
     wiFiServer.begin();
-    delay(1000);
+    Serial.println("Server started and listening on port 80");
 
-    // listen for incoming clients
-    WiFiClient client = wiFiServer.available();
-    if (client) {
-        //Serial.println("new client");
-        digitalWrite(LED_AZURE, 1);
-        textOutDevKitScreen(1, "new client", 1);
-        textOutDevKitScreen(2, "", 1);
-        textOutDevKitScreen(3, "", 1);
-        // an http request ends with a blank line
-        boolean currentLineIsBlank = true;
-        while (client.connected()) {
-            if (client.available()) {
-                char c = client.read();
-                Serial.write(c);
+    // Ottieni l'IP locale del dispositivo
+    IPAddress localIP = WiFi.localIP();
 
-                float pressure = 0;
-                float temperaturePR = 0;
-                pressureSensor->getPressure(&pressure);
-                pressureSensor->getTemperature(&temperaturePR);
-                ht_sensor->reset();
-                float temperatureHT = 0;
-                ht_sensor->getTemperature(&temperatureHT);
-                float humidity = 0;
-                ht_sensor->getHumidity(&humidity);
+    // Costruisci la stringa dell'indirizzo IP manualmente
+    String ipString = "IP: ";
+    ipString += localIP[0];
+    ipString += ".";
+    ipString += localIP[1];
+    ipString += ".";
+    ipString += localIP[2];
+    ipString += ".";
+    ipString += localIP[3];
 
-                if (c == '\n' && currentLineIsBlank) {
-                    // send a standard http response header
-                    client.println("HTTP/1.1 200 OK");
-                    client.println("nontent-Type: text/html");
-                    client.println("Connection: close");
-                    client.println("Refresh: 2");
-                    client.println("");
-                    client.println("<!DOCTYPE HTML>");
-                    client.println("<html><body>");
-                    client.print("{");
-                    client.print("\"temperature_sensor_1\":");
-                    client.print(temperaturePR);
-                    client.print(",");
-                    client.print("\"temperature_sensor_2\":");
-                    client.print(temperatureHT);
-                    client.print(",");
-                    client.print("\"pressure\":");
-                    client.print(pressure);
-                    client.print(",");
-                    client.print("\"humidity\":");
-                    client.print(humidity);
-                    client.println("}");
+    // Mostra l'IP del server
+    textOutDevKitScreen(2, ipString.c_str(), 1);
 
-                    client.println("</body></html>");
-                    break;
-                }
-                if (c == '\n') {
-                    // you're starting a new line
-                    currentLineIsBlank = true;
-                } else if (c != '\r') {
-                    // you've gotten a character on the current line
-                    currentLineIsBlank = false;
+    while (true) {
+        WiFiClient client = wiFiServer.available();
+        if (client) {
+            Serial.println("New client connected");
+            textOutDevKitScreen(0, "Client Connected", 1);
+            digitalWrite(LED_AZURE, 1);  // Accende l'indicatore LED per il client
+
+            boolean currentLineIsBlank = true;
+            while (client.connected()) {
+                if (client.available()) {
+                    char c = client.read();
+                    Serial.write(c);
+
+                    float pressure = 0;
+                    float temperaturePR = 0;
+                    pressureSensor->getPressure(&pressure);
+                    pressureSensor->getTemperature(&temperaturePR);
+                    ht_sensor->reset();
+                    float temperatureHT = 0;
+                    ht_sensor->getTemperature(&temperatureHT);
+                    float humidity = 0;
+                    ht_sensor->getHumidity(&humidity);
+
+                    if (c == '\n' && currentLineIsBlank) {
+                        Serial.println("Sending HTTP response");
+
+                        client.println("HTTP/1.1 200 OK");
+                        client.println("Content-Type: text/html");
+                        client.println("Connection: close");
+                        client.println("Refresh: 2");
+                        client.println("");
+                        client.println("<!DOCTYPE HTML>");
+                        client.println("<html><body>");
+                        client.print("{");
+                        client.print("\"temperature_sensor_1\":");
+                        client.print(temperaturePR);
+                        client.print(",");
+                        client.print("\"temperature_sensor_2\":");
+                        client.print(temperatureHT);
+                        client.print(",");
+                        client.print("\"pressure\":");
+                        client.print(pressure);
+                        client.print(",");
+                        client.print("\"humidity\":");
+                        client.print(humidity);
+                        client.println("}");
+                        client.println("</body></html>");
+                        break;
+                    }
+                    if (c == '\n') {
+                        currentLineIsBlank = true;
+                    } else if (c != '\r') {
+                        currentLineIsBlank = false;
+                    }
                 }
             }
-        }
-        // give the web browser time to receive the data
-        delay(1);
 
-        // close the connection:
-        client.stop();
-        //Serial.println("client disonnected");
-        digitalWrite(LED_AZURE, 0);
-        textOutDevKitScreen(1, "client disonnected", 1);
-        textOutDevKitScreen(2, "", 1);
-        textOutDevKitScreen(3, "", 1);
+            // Messaggio di stato finale sul display
+            textOutDevKitScreen(1, "Client Disconnected", 1);
+            textOutDevKitScreen(2, "Processing...", 1);
+            textOutDevKitScreen(3, "Waiting...", 1);
+            delay(1000);  // Mostra il messaggio di disconnessione per un secondo
+
+            // Spegne l'indicatore LED
+            digitalWrite(LED_AZURE, 0);
+            client.stop();
+        } else {
+            // Messaggio di attesa per nuovi client
+            textOutDevKitScreen(0, "Server HTTP\r\n", 1);
+            textOutDevKitScreen(1, "listening...\r\n\r\n", 1);
+            textOutDevKitScreen(2, ipString.c_str(), 1);
+            textOutDevKitScreen(3, "", 1);
+            delay(100);  // Breve ritardo per evitare l'uso eccessivo della CPU
+        }
     }
 }
 

@@ -81,6 +81,7 @@ private:
     IRDASensor *IrdaSensor;
     LPS22HBSensor *pressureSensor;
 
+
     int axes[3];
     char wifiBuff[128];
     char firmwareBuff[128];
