@@ -486,23 +486,17 @@ void App::monitoringHTTPServerConnections(bool blockingSocket)
    }
 }
 
-void App::sendSensorDataToServer()
-{
-   // Mostra stato iniziale sul display
+void App::sendSensorDataToServer(){
    displayText("SendDataToServer", "Initializing...");
 
    const char *serverHost = "script.google.com";
    const char *serverPath = "/macros/s/AKfycbznesLY2xrW4-4z4habmaLgcw9eXnGLGQIQj0jRXGdLpSnEiO1Rxols7oJ9v4em0D1r/exec";
-   const unsigned short port = 443; // Porta per HTTP
+   const unsigned short port = 443;
 
-   WiFiClient client; // Usa WiFiClient per la connessione HTTP
+   WiFiClient client;
 
-   while (true)
-   {
-      // Mostra lo stato iniziale sul display
+   while (true){
       displayText("Sensor Data", "Starting data send...");
-
-      // Tentativo di connessione
       displayText("Connecting", "Connecting to server...");
       if (client.connect(serverHost, port))
       {
