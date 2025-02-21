@@ -82,7 +82,7 @@ public:
     void updateButtonsState();
     void showSensorsInfo();
     void showWifiInfo();
-    void startSensorsServerClient();
+    void sendSensorDataToServer();
     void monitoringHTTPServerConnections(bool blockingSocket);
     void refreshLeds();
     void setRGBcolor(COLOR color2);
@@ -97,6 +97,7 @@ public:
     void showHumidTempSensor();
     void showMagneticSensor();
     bool IsButtonClicked(unsigned char ulPin);
+  	void displayText(const char* title, const char* body);
 };
 
 #endif // APP_H_
