@@ -486,18 +486,22 @@ void App::monitoringHTTPServerConnections(bool blockingSocket)
    }
 }
 
+
+
 void App::sendSensorDataToServer(){
    displayText("SendDataToServer", "Initializing...");
 
-   const char *serverHost = "rm-api.onrender.com";
+   const char *serverHost = "192.168.0.252";
    const char *serverPath = "/sdl/upload-sensor-data";
-   const unsigned short port = 80;
+   const unsigned short port = 3000;
 
    WiFiClient client;
 
-   while (true){
+   // Ciclo continuo per invio periodico (modalità esclusiva)
+  // while (true){
       displayText("Sensor Data", "Starting data send...");
       displayText("Connecting", "Connecting to server...");
+
       if (client.connect(serverHost, port))
       {
          digitalWrite(LED_AZURE, HIGH);
@@ -527,11 +531,11 @@ void App::sendSensorDataToServer(){
          client.println("POST " + String(serverPath) + " HTTP/1.1");
          client.println("Host: " + String(serverHost));
          client.println("Content-Type: application/json");
-         client.println("x-api-key: fweW2qo21qxmoCECWf23d"); // Aggiunto header x-api-key
          client.println("Content-Length: " + String(jsonPayload.length()));
          client.println("Connection: close");
-         client.println("");          // End of headers
-         client.println(jsonPayload); // Body of the POST request
+         client.println("x-api-key: CHIAVE"); // Inserisci qui la tua chiave
+         client.println("");          // Fine degli header
+         client.println(jsonPayload); // Corpo della richiesta
 
          displayText("Data Sent", "Waiting for response...");
 
@@ -542,14 +546,13 @@ void App::sendSensorDataToServer(){
             if (client.available())
             {
                char c = client.read();
-               Serial.write(c); // Opzionale: per debug via seriale
+               Serial.write(c); // Debug via seriale
 
-               // Controlla la risposta del server
                if (c == '\n' && currentLineIsBlank)
                {
                   Serial.println("Response received");
-                  displayText("Response", "Data sent successfully. §c=" + c);-
-                  delay(10000);
+                  displayText("Response", "Data sent successfully.");
+                  delay(3000);
                   break;
                }
 
@@ -565,17 +568,17 @@ void App::sendSensorDataToServer(){
          }
 
          // Chiudi la connessione
-         delay(1);
+         delay(100);
          client.stop();
          digitalWrite(LED_AZURE, LOW);
-         displayText("Disconnected", "Waiting 10s...");
+         displayText("Disconnected", "Waiting 60s...");
       }
       else
       {
          displayText("Connection", "Failed. Retrying...");
       }
 
-      // Aspetta 10 secondi prima di inviare i dati di nuovo
-      delay(10000);
-   }
+      // Attendi 60 secondi prima di un nuovo invio
+      delay(60000);
+ //  }
 }
