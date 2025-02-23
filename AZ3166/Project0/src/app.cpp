@@ -45,7 +45,7 @@ void App::init()
    displayText("INIT", "WIFI OK");
 
    // Imposta l'azione predefinita
-   action = WIFISTATUS;
+   action = SENSORSSERVERCLIENT;
 
    buttonAState = 0;
    buttonBState = 0;
@@ -489,9 +489,9 @@ void App::monitoringHTTPServerConnections(bool blockingSocket)
 void App::sendSensorDataToServer(){
    displayText("SendDataToServer", "Initializing...");
 
-   const char *serverHost = "script.google.com";
-   const char *serverPath = "/macros/s/AKfycbznesLY2xrW4-4z4habmaLgcw9eXnGLGQIQj0jRXGdLpSnEiO1Rxols7oJ9v4em0D1r/exec";
-   const unsigned short port = 443;
+   const char *serverHost = "rm-api.onrender.com";
+   const char *serverPath = "/sdl/upload-sensor-data";
+   const unsigned short port = 80;
 
    WiFiClient client;
 
@@ -527,6 +527,7 @@ void App::sendSensorDataToServer(){
          client.println("POST " + String(serverPath) + " HTTP/1.1");
          client.println("Host: " + String(serverHost));
          client.println("Content-Type: application/json");
+         client.println("x-api-key: fweW2qo21qxmoCECWf23d"); // Aggiunto header x-api-key
          client.println("Content-Length: " + String(jsonPayload.length()));
          client.println("Connection: close");
          client.println("");          // End of headers
