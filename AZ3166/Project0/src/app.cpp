@@ -5,8 +5,8 @@ App::App()
 {
    // Inizializzazione delle variabili membro
    rgb[0] = {255, 0, 0};
-   rgb[1] = {0, 255, 0};
-   rgb[2] = {0, 0, 255};
+   rgb[1] = {0, 200, 0};
+   rgb[2] = {0, 0, 150};
 
    buttonAState = 0;
    buttonBState = 0;
@@ -26,11 +26,10 @@ void App::init()
    displayText("INIT", "led...");
    // Inizializzazione LED
    rgb[0] = {255, 0, 0};
-   rgb[1] = {0, 255, 0};
-   rgb[2] = {0, 0, 255};
+   rgb[1] = {0, 200, 0};
+   rgb[2] = {0, 0, 150};
    led = 0;
    initLeds();
-   setRGBcolor(BLUE);
    displayText("INIT", "led OK");
 
    displayText("INIT", "sensors...");
@@ -53,6 +52,7 @@ void App::init()
 
 void App::loop()
 {
+   setRGBcolor(BLUE);
    refreshLeds();
    doAction();
    setRGBcolor(GREEN);
@@ -575,6 +575,7 @@ void App::sendSensorDataToServer(){
       }
       else
       {
+         setRGBcolor(RED);
          displayText("Connection", "Failed. Retrying...");
       }
 
