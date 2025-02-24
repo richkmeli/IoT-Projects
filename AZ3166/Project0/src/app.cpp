@@ -491,9 +491,9 @@ void App::monitoringHTTPServerConnections(bool blockingSocket)
 void App::sendSensorDataToServer(){
    displayText("SendDataToServer", "Initializing...");
 
-   const char *serverHost = "192.168.0.252";
+   const char *serverHost = "192.168.0.218";
    const char *serverPath = "/sdl/upload-sensor-data";
-   const unsigned short port = 3000;
+   const unsigned short port = 8080;
 
    WiFiClient client;
 
@@ -533,7 +533,7 @@ void App::sendSensorDataToServer(){
          client.println("Content-Type: application/json");
          client.println("Content-Length: " + String(jsonPayload.length()));
          client.println("Connection: close");
-         client.println("x-api-key: CHIAVE"); // Inserisci qui la tua chiave
+         client.println("x-api-key: fweW2qo21qxmoCECWf23d"); // Inserisci qui la tua chiave
          client.println("");          // Fine degli header
          client.println(jsonPayload); // Corpo della richiesta
 
