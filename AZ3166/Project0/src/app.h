@@ -87,7 +87,7 @@ public:
     void refreshLeds();
     void setRGBcolor(COLOR color2);
     void initSerial();
-    void initWifi();
+	bool initWifi();
     void printWifiStatus();
     void initLeds();
     void initSensors();

@@ -7,9 +7,9 @@
 static App app;
 
 void setup() {
-    app.init();
+  app.init();
 }
 
 void loop() {
-    app.loop();
+  app.loop();
 }
