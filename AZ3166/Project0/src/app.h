@@ -9,8 +9,15 @@
 #include <LSM6DSLSensor.h>
 #include <RGB_LED.h>
 #include <Sensor.h>
+#include <Arduino.h>
+#include <OTAFirmwareUpdate.h>
+#include "FATFileSystem.h"
+#include "SFlashBlockDevice.h"
+#include "fatfs_exfuns.h"
+#include "AudioClassV2.h"
 
 #include <SPI.h>
+#include <OledDisplay.h>
 #include <AZ3166WiFiClient.h>
 #include <AZ3166WiFiServer.h>
 #include <AZ3166WiFiUdp.h>
@@ -39,7 +46,12 @@ public:
 };
 
 enum COLOR {
-    RED = 0, GREEN = 1, BLUE = 2
+    RED = 0,
+    GREEN = 1,
+    BLUE = 2,
+    YELLOW = 3,
+    CYAN = 4,
+    MAGENTA = 5
 };
 
 class App {
@@ -73,6 +85,7 @@ private:
     char wifiBuff[128];
     char firmwareBuff[128];
     char firmwareTelemetryBuff[64];
+    OLEDDisplay display;
 
 public:
     App();  // Costruttore dichiarato, ma senza definizione nel file header
@@ -98,6 +111,7 @@ public:
     void showMagneticSensor();
     bool IsButtonClicked(unsigned char ulPin);
   	void displayText(const char* title, const char* body);
+    void enterSleepModeWithDisplay(unsigned long sleepDuration);
 };
 
 #endif // APP_H_
